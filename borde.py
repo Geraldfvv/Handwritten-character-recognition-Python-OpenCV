@@ -85,7 +85,7 @@ def applyBorder(image,letra,format,num):
         widtg = round((borderSizeTop-w)/2)
         height = round((borderSizeTop-h)/2)
         border = cv2.copyMakeBorder(image, top=height, bottom=height, left=widtg, right=widtg, borderType= cv2.BORDER_CONSTANT, value=[0,0,0] )
-        cv2.imwrite('./SpecimensWithBorders/'+letra+'/'+letra+format+num+'.png',border)
+        cv2.imwrite('./SpecimensWithBorders/'+letra+'/'+letra+format+'-'+num+'.png',border)
     
     else:
         scale_percent = 55 # percent of original size
@@ -98,6 +98,6 @@ def applyBorder(image,letra,format,num):
         widtg = round((borderSizeTop-w)/2)
         height = round((borderSizeTop-h)/2)
         border = cv2.copyMakeBorder(resized, top=height, bottom=height, left=widtg, right=widtg, borderType= cv2.BORDER_CONSTANT, value=[0,0,0] )
-        cv2.imwrite('./SpecimensWithBorders/'+letra+'/'+letra+format+num+'.png',border)
+        cv2.imwrite('./SpecimensWithBorders/'+letra+'/'+letra+format+'-'+num+'.png',border)
 
 letters()
