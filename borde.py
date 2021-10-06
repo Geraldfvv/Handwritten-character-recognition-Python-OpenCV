@@ -101,3 +101,5 @@ def applyBorder(image,letra,format,num):
         cv2.imwrite('./SpecimensWithBorders/'+letra+'/'+letra+format+'-'+num+'.png',border)
 
 letters()
+
+#Prueba
