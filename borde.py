@@ -23,3 +23,5 @@ else:
     resized = cv2.resize(src, dsize[, dst[, fx[, fy[, interpolation]]]])
 
 #Cambios
+
+#cambios 02
