@@ -10,25 +10,16 @@ import numpy as nu
 def apply_processing(letter):
     path, dirs, files = next(os.walk('./Imagenes/'+letter))
     path1, dirs2, files2 = next(os.walk('./Specimen/'+letter))
+
+    print("- Extracting " + letter + "'s : " + str(len(files)) + " Images ...")
+
     i = 0
-    dimX = 0
-    dimY = 0
+    dimX = 35
+    dimY = 35
     for f in files:
-        if (letter == 'A'):
-            dimX = 50
-            dimY = 20
-        elif (letter == 'E'):
-            dimX = 40
-            dimY = 30
-        elif (letter == 'I'):
-            dimX = 9
-            dimY = 15
-        elif (letter == 'O'):
-            dimX = 35
-            dimY = 35
-        elif (letter == 'U'):
-            dimX = 35
-            dimY = 35
+        if (letter == 'I'):
+            dimX = 8
+            dimY = 40
         stract_specimen(letter,i,dimX,dimY,len(files2),'./Imagenes/'+letter+"/"+f)
         i+=1
 
@@ -56,6 +47,8 @@ def stract_specimen(letter,sample,dimX,dimY,index,img):
 # Aplica bordes a todos los especimenes de una letra en especifico      
 def modify_specimens(letter):
     path, dirs, files = next(os.walk('./Specimen/'+letter))
+    print("- Processing " + letter + "'s : " + str(len(files)) + " Images ...")
+
     for f in files:
         image = cv.imread('./Specimen/'+letter+'/'+f)
         applyBorder(image,letter,f)
@@ -70,20 +63,18 @@ def applyBorder(image,letra,num):
         height = round((borderSizeTop-h)/2)
         border = cv.copyMakeBorder(image, top=height, bottom=height, left=width, right=width, borderType= cv.BORDER_CONSTANT, value=[0,0,0] )
         resize = cv.resize(border,(100,100))
-       
         cv.imwrite('./SpecimensWithBorders/'+letra+'/'+num,resize)
-    
     else:
         scale_percent = 55 # percent of original size
-        width = int(w * scale_percent / 100)
-        height = int(h * scale_percent / 100)
+        width = round(w * scale_percent / 100)
+        height = round(h * scale_percent / 100)
         dim = (width, height)
         resized = cv.resize(image, dim, interpolation = cv.INTER_AREA)
 
         h, w, c = image.shape
-        widtg = round((borderSizeTop-w)/2)
-        height = round((borderSizeTop-h)/2)
-        border = cv.copyMakeBorder(resized, top=height, bottom=height, left=widtg, right=widtg, borderType= cv.BORDER_CONSTANT, value=[0,0,0] )
+        width = abs(int((borderSizeTop-w)/2))
+        height = abs(int((borderSizeTop-h)/2))
+        border = cv.copyMakeBorder(resized, top=height, bottom=height, left=width, right=width, borderType= cv.BORDER_CONSTANT, value=[0,0,0] )
         resize = cv.resize(border,(100,100))
         cv.imwrite('./SpecimensWithBorders/'+letra+'/'+num,resize)
 
@@ -105,8 +96,7 @@ def extract_histogram(img,ax):
         return hist
 
 # Genera un grafico del histograma
-def generate_graphic_histogram(img,ax):
-    hist = extract_histogram(img,ax)
+def generate_graphic_histogram(hist):
     hist_formated = []
     for h in hist:
         x = []
@@ -114,11 +104,14 @@ def generate_graphic_histogram(img,ax):
         hist_formated.append(x)
     return hist_formated
 
-def test(letter):
+# Genera un promedio del histograma con todos los especimenes
+def calculate_average(letter):
     path, dirs, files = next(os.walk('./SpecimensWithBorders/'+letter))
     histogram = []
+    print("- Average histogram letter " + letter + " : " + str(len(files)) + " Images ...")
+
     for f in files: 
-        hist = nu.array(extract_histogram(path+"/"+f))
+        hist = nu.array(extract_histogram(path+"/"+f,'X'))
         if (len(histogram)==0):
             histogram = hist
         else:
@@ -131,29 +124,98 @@ def test(letter):
             histogram[i] = round(num / len(files))
         i+=1
 
-    print(sum(histogram))
+    return (histogram)
 
-def apply():
+# Muestra los histograma promedio de cada letra
+def show_histogram(A,E,I,O,U):
+    fig, ax = plt.subplots(2,3)
+    ax[0,0].plot(generate_graphic_histogram(A))
+    ax[0,0].set_title('Histogram A')
+
+    ax[0,1].plot(generate_graphic_histogram(E) )
+    ax[0,1].set_title('Histogram E')
+
+    ax[0,2].plot(generate_graphic_histogram(I) )
+    ax[0,2].set_title('Histogram I')
+
+    ax[1,0].plot(generate_graphic_histogram(O) )
+    ax[1,0].set_title('Histogram O')
+
+    ax[1,1].axis('off')
+
+    ax[1,2].plot(generate_graphic_histogram(U) )
+    ax[1,2].set_title('Histogram U')
+
+    plt.show()
+
+def main():
+    print("============================ Extracting specimens")
+    """
     apply_processing('A')
     apply_processing('E')
     apply_processing('I')
     apply_processing('O')
     apply_processing('U')
+    """
 
+    print("============================ Recizing and centering")
+    """
     modify_specimens('A')
     modify_specimens('E')
     modify_specimens('I')
     modify_specimens('O')
     modify_specimens('U')
+    """
 
-#A = generate_graphic_histogram('./SpecimensWithBorders/A/A0-0.png','X') 
-#E = generate_graphic_histogram('./SpecimensWithBorders/E/E0-0.png','X') 
-#I = generate_graphic_histogram('./SpecimensWithBorders/I/I0-0.png','X') 
-#O = generate_graphic_histogram('./SpecimensWithBorders/O/O0-0.png','X') 
+    print("============================ Making average histogram")
+    avgA = avgE = avgI = avgO = avgU = '' 
 
-#fig, ax = plt.subplots(2,2)
-#ax[0,0].plot(A)
-#ax[0,1].plot(E)
-#ax[1,0].plot(I)
-#ax[1,1].plot(O)
-#plt.show()
+    """
+    avgA = calculate_average('A')
+    avgE = calculate_average('E')
+    avgI = calculate_average('I')
+    avgO = calculate_average('O')
+    avgU = calculate_average('U')
+
+    file = open("histograms.txt","w",encoding="utf-8")
+    file.write(str(avgA)+"\n")
+    file.write(str(avgE)+"\n")
+    file.write(str(avgI)+"\n")
+    file.write(str(avgO)+"\n")
+    file.write(str(avgU)+"\n")
+    file.close()
+    """
+
+    if (avgA == avgE == avgI == avgO == avgU == '' ):
+        file = open("histograms.txt","r")
+        i = 0
+        for line in file:
+            hist = line.replace("[","")
+            hist = hist.replace("]","")
+            hist = hist.replace("\n","")
+            hist = list(hist.split(','))
+            hist = [int(i) for i in hist]
+            if i == 0 :
+                avgA = hist
+                i+=1
+            elif i == 1 :
+                avgE = hist
+                i+=1
+            elif i == 2 :
+                avgI = hist
+                i+=1
+            elif i == 3 :
+                avgO = hist
+                i+=1
+            elif i == 4 :
+                avgU = hist
+                i+=1
+        file.close()
+
+    show_histogram(avgA,avgE,avgI,avgO,avgU)
+
+
+
+main()
+
+
