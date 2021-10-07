@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import os, os.path
 import cv2 as cv
 import imutils 
+import numpy as nu
 
 # Aplica el procesamiento a las fotos en la carpetea Imagenes que contienen aproximadamente
 # 40 letras cada imagen.
@@ -38,8 +39,9 @@ def stract_specimen(letter,sample,dimX,dimY,index,img):
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     blurred = cv.GaussianBlur(gray,(5,5),0)
     edged = cv.Canny(blurred,30,150)
+    ret,binary = cv.threshold(edged, 0, 255, cv.THRESH_BINARY )
 
-    cnts = cv.findContours(edged.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)
+    cnts = cv.findContours(binary.copy(), cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
     cnts = sort_contours(cnts, method="left-to-right")[0]
 
@@ -47,7 +49,7 @@ def stract_specimen(letter,sample,dimX,dimY,index,img):
     for c in cnts:
         (x, y, w, h) = cv.boundingRect(c)
         if (w >= dimX and w <= 150) and (h >= dimY and h <= 120):
-            roi = gray[y:y + h, x:x + w]
+            roi = binary[y:y + h, x:x + w]
             cv.imwrite('./Specimen/'+letter+"/"+letter+str(sample)+"-"+str(i)+'.png',roi)
             i+=1
 
@@ -66,8 +68,9 @@ def applyBorder(image,letra,num):
     if (w < 100) and (h < 100):
         width = round((borderSizeTop-w)/2)
         height = round((borderSizeTop-h)/2)
-        border = cv.copyMakeBorder(image, top=height, bottom=height, left=width, right=width, borderType= cv.BORDER_CONSTANT, value=[255,255,255] )
+        border = cv.copyMakeBorder(image, top=height, bottom=height, left=width, right=width, borderType= cv.BORDER_CONSTANT, value=[0,0,0] )
         resize = cv.resize(border,(100,100))
+       
         cv.imwrite('./SpecimensWithBorders/'+letra+'/'+num,resize)
     
     else:
@@ -80,41 +83,77 @@ def applyBorder(image,letra,num):
         h, w, c = image.shape
         widtg = round((borderSizeTop-w)/2)
         height = round((borderSizeTop-h)/2)
-        border = cv.copyMakeBorder(resized, top=height, bottom=height, left=widtg, right=widtg, borderType= cv.BORDER_CONSTANT, value=[255,255,255] )
+        border = cv.copyMakeBorder(resized, top=height, bottom=height, left=widtg, right=widtg, borderType= cv.BORDER_CONSTANT, value=[0,0,0] )
         resize = cv.resize(border,(100,100))
         cv.imwrite('./SpecimensWithBorders/'+letra+'/'+num,resize)
 
 # Extrae el histograma de una imagen
-def extract_histogram(img):
+def extract_histogram(img,ax):
     image = cv.imread(img)
-    hist = cv.calcHist([image],[0],None,[256],[0,256])
+    dim = image.shape
+    hist = []
 
-    flat_list = []
-    for sublist in hist:
-        for item in sublist:
-            flat_list.append(item)
+    count = 0
+    if (ax == 'X'):
+        for i in range(0,dim[0]):
+            for j in range(0,dim[1]):
+                if (nu.any(image[i,j]) != 0):
+                    count = count + 1
+            if((i+1)%4 == 0):
+                hist.append(count)
+                count = 0
+        return hist
 
-    return flat_list
+# Genera un grafico del histograma
+def generate_graphic_histogram(img,ax):
+    hist = extract_histogram(img,ax)
+    hist_formated = []
+    for h in hist:
+        x = []
+        x.append(h)
+        hist_formated.append(x)
+    return hist_formated
 
-def test():
+def test(letter):
+    path, dirs, files = next(os.walk('./SpecimensWithBorders/'+letter))
+    histogram = []
+    for f in files: 
+        hist = nu.array(extract_histogram(path+"/"+f))
+        if (len(histogram)==0):
+            histogram = hist
+        else:
+            zip_list = zip(histogram,hist)
+            histogram = [x + y for (x,y) in zip_list]
     
+    i = 0
+    for num in histogram:
+        if (num != 0):
+            histogram[i] = round(num / len(files))
+        i+=1
 
+    print(sum(histogram))
 
+def apply():
+    apply_processing('A')
+    apply_processing('E')
+    apply_processing('I')
+    apply_processing('O')
+    apply_processing('U')
 
+    modify_specimens('A')
+    modify_specimens('E')
+    modify_specimens('I')
+    modify_specimens('O')
+    modify_specimens('U')
 
+#A = generate_graphic_histogram('./SpecimensWithBorders/A/A0-0.png','X') 
+#E = generate_graphic_histogram('./SpecimensWithBorders/E/E0-0.png','X') 
+#I = generate_graphic_histogram('./SpecimensWithBorders/I/I0-0.png','X') 
+#O = generate_graphic_histogram('./SpecimensWithBorders/O/O0-0.png','X') 
 
-print(flat_list)
-
-histList = []
-histList.append(h0)
-histList.append(h2)
-
-
-
-# Aplicar filtros a las imagenes iniciales
-
-# apply_processing('A')
-# apply_processing('E')
-# apply_processing('I')
-# apply_processing('O')
-# apply_processing('U')
+#fig, ax = plt.subplots(2,2)
+#ax[0,0].plot(A)
+#ax[0,1].plot(E)
+#ax[1,0].plot(I)
+#ax[1,1].plot(O)
+#plt.show()
