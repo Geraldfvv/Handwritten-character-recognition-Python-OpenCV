@@ -4,6 +4,7 @@ import os, os.path
 import cv2 as cv
 import imutils 
 import numpy as nu
+import random
 
 # Aplica el procesamiento a las fotos en la carpetea Imagenes que contienen aproximadamente
 # 40 letras cada imagen.
@@ -105,13 +106,13 @@ def generate_graphic_histogram(hist):
     return hist_formated
 
 # Genera un promedio del histograma con todos los especimenes
-def calculate_average(letter):
-    path, dirs, files = next(os.walk('./SpecimensWithBorders/'+letter))
+def calculate_average(letter,list):
+    files = list[0]
     histogram = []
     print("- Average histogram letter " + letter + " : " + str(len(files)) + " Images ...")
 
     for f in files: 
-        hist = nu.array(extract_histogram(path+"/"+f,'X'))
+        hist = nu.array(extract_histogram('./SpecimensWithBorders/'+letter+"/"+ f,'X'))
         if (len(histogram)==0):
             histogram = hist
         else:
@@ -148,34 +149,57 @@ def show_histogram(A,E,I,O,U):
 
     plt.show()
 
+# Crea dos listas, una con el 70% de las muestras y otra con el
+def select_specimen(letter):
+    path, dirs, files = next(os.walk('./SpecimensWithBorders/'+letter))
+    nelements = round(len(files)*0.7)
+    specimens70 = []
+    specimens30 = []
+    specimens = []
+
+    while len(specimens70) < nelements:
+        file = files[random.randint(0,len(files)-1)]
+        if file not in specimens70:
+            specimens70.append(file)
+    
+    specimens30 = list(set(files) - set(specimens70))
+    specimens.append(specimens70)
+    specimens.append(specimens30)
+    return (specimens)
+
 def main():
     print("============================ Extracting specimens")
-    """
-    apply_processing('A')
-    apply_processing('E')
-    apply_processing('I')
-    apply_processing('O')
-    apply_processing('U')
-    """
+    
+    #apply_processing('A')
+    #apply_processing('E')
+    #apply_processing('I')
+    #apply_processing('O')
+    #apply_processing('U')
 
     print("============================ Recizing and centering")
-    """
-    modify_specimens('A')
-    modify_specimens('E')
-    modify_specimens('I')
-    modify_specimens('O')
-    modify_specimens('U')
-    """
+    
+    #modify_specimens('A')
+    #modify_specimens('E')
+    #modify_specimens('I')
+    #modify_specimens('O')
+    #modify_specimens('U')
+
+    print("============================ Selecting specimens")
+
+    a_specimens = select_specimen('A')
+    e_specimens = select_specimen('E')
+    i_specimens = select_specimen('I')
+    o_specimens = select_specimen('O')
+    u_specimens = select_specimen('U')
 
     print("============================ Making average histogram")
     avgA = avgE = avgI = avgO = avgU = '' 
 
-    """
-    avgA = calculate_average('A')
-    avgE = calculate_average('E')
-    avgI = calculate_average('I')
-    avgO = calculate_average('O')
-    avgU = calculate_average('U')
+    avgA = calculate_average('A',a_specimens)
+    avgE = calculate_average('E',e_specimens)
+    avgI = calculate_average('I',i_specimens)
+    avgO = calculate_average('O',o_specimens)
+    avgU = calculate_average('U',u_specimens)
 
     file = open("histograms.txt","w",encoding="utf-8")
     file.write(str(avgA)+"\n")
@@ -184,8 +208,7 @@ def main():
     file.write(str(avgO)+"\n")
     file.write(str(avgU)+"\n")
     file.close()
-    """
-
+    
     if (avgA == avgE == avgI == avgO == avgU == '' ):
         file = open("histograms.txt","r")
         i = 0
@@ -211,11 +234,7 @@ def main():
                 avgU = hist
                 i+=1
         file.close()
-
     show_histogram(avgA,avgE,avgI,avgO,avgU)
 
-
-
-main()
-
+#main()
 
